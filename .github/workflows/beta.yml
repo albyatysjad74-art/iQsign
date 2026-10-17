@@ -19,7 +19,6 @@ jobs:
 
       - name: Select Xcode 16
         run: |
-          # اختيار أحدث إصدار متوفر من Xcode 16 على بيئة البناء
           XCODE_PATH=$(find /Applications -maxdepth 1 -name "Xcode_16*.app" | sort -V | tail -n 1)
           if [ -n "$XCODE_PATH" ]; then
             echo "Selected Xcode: $XCODE_PATH"
@@ -28,27 +27,28 @@ jobs:
             echo "Using default Xcode"
           fi
 
-      - name: Setup Xcodebuild Destination Shim
+      - name: Setup Xcodebuild Wrapper
         run: |
-          # إنشاء غلاف لأمر xcodebuild لإجبار تحديد وجهة بناء iOS لأي أمر ينفذه make
           mkdir -p "$HOME/bin"
           REAL_XCODEBUILD=$(xcrun -f xcodebuild)
           cat << 'EOF' > "$HOME/bin/xcodebuild"
           #!/bin/bash
-          ARGS=("$@")
-          HAS_DEST=0
+          FILTERED_ARGS=()
+          SKIP_NEXT=0
+
           for arg in "$@"; do
-            if [ "$arg" = "-destination" ]; then
-              HAS_DEST=1
-              break
+            if [ $SKIP_NEXT -eq 1 ]; then
+              SKIP_NEXT=0
+              continue
             fi
+            if [ "$arg" = "-arch" ]; then
+              SKIP_NEXT=1
+              continue
+            fi
+            FILTERED_ARGS+=("$arg")
           done
 
-          if [ $HAS_DEST -eq 0 ]; then
-            exec "$REAL_XCODEBUILD_PATH" "${ARGS[@]}" -destination "generic/platform=iOS"
-          else
-            exec "$REAL_XCODEBUILD_PATH" "${ARGS[@]}"
-          fi
+          exec "$REAL_XCODEBUILD_PATH" "${FILTERED_ARGS[@]}" -destination "generic/platform=iOS"
           EOF
 
           chmod +x "$HOME/bin/xcodebuild"
@@ -57,7 +57,6 @@ jobs:
 
       - name: Build
         run: |
-          # تعطيل قيود الـ Sandbox لإضافات Xcode وتشغيل البناء
           make OTHER_CODE_SIGN_FLAGS="--disablePackagePluginSandbox" || make
 
       - name: Update Beta Release
