@@ -25,21 +25,10 @@ jobs:
             sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
           fi
 
-      - name: Remove LicensePlist Plugin from Project
+      - name: Fix Submodules & License File
         run: |
-          # تعطيل أداة LicensePlist من ملف المشروع مباشرة بدون لمس مجلد Zsign
-          sed -i '' '/LicensePlist/d' Ksign.xcodeproj/project.pbxproj || true
-          
-          # التأكد من جلب الـ Submodules بشكل سليم
           git submodule update --init --recursive || true
-          
-          # إذا كان مجلد Zsign موجوداً أصلاً، نضع فيه ملف الرخصة دون إنشاء مجلدات عشوائية
-          if [ -d "Zsign" ]; then
-            touch Zsign/LICENSE_LC
-          fi
-          if [ -d "Ksign/Zsign" ]; then
-            touch Ksign/Zsign/LICENSE_LC
-          fi
+          find . -type d -name "Zsign" -exec touch {}/LICENSE_LC \; 2>/dev/null || true
 
       - name: Build
         run: |
