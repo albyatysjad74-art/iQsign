@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Build Beta
-    runs-on: macos-26
+    runs-on: macos-14
 
     steps:
       - name: Checkout Code
@@ -19,7 +19,8 @@ jobs:
 
       - name: Build
         run: |
-          make
+          # تعطيل قيود الـ Sandbox لإضافات Xcode وتمرير خيارات التجاوز لـ make
+          make OTHER_CODE_SIGN_FLAGS="--disablePackagePluginSandbox" || make
 
       - name: Update Beta Release
         env:
@@ -51,6 +52,7 @@ jobs:
             --target ${{ github.sha }}
 
       - name: Notify Discord
+        if: env.DISCORD_WEBHOOK != ''
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         run: |
