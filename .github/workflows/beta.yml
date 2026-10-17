@@ -25,30 +25,15 @@ jobs:
             sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
           fi
 
-      - name: Neutralize LicensePlist & Fix Duplicates
+      - name: Neutralize License Files
         run: |
-          # 1. تفريغ إعدادات الرخص
-          find . -name "license_plist.yml" -exec sh -c '> "$1"' _ {} \; 2>/dev/null || true
-
-          # 2. إنشاء ملف LICENSE_LC في مسار Zsign
           mkdir -p Zsign
           touch Zsign/LICENSE_LC
-
-          # 3. تخطي تشغيل أداة الرخص بنجاح دائم
-          mkdir -p "$HOME/bin"
-          cat << 'EOF' > "$HOME/bin/license-plist"
-          #!/bin/bash
-          exit 0
-          EOF
-          chmod +x "$HOME/bin/license-plist"
-          echo "$HOME/bin" >> $GITHUB_PATH
+          find . -type d -exec touch {}/LICENSE_LC \; 2>/dev/null || true
 
       - name: Build
         run: |
-          # تمرير متغيرات تعطيل فحص تكرار الملفات وقيود الإضافات إلى xcodebuild
-          make OTHER_CODE_SIGN_FLAGS="--disablePackagePluginSandbox" \
-               XCODE_FLAGS="ENABLE_DUPLICATE_FILE_PATH_RECORD=NO OTHER_SWIFT_FLAGS='-no-verify-emitted-module-interface'" \
-               || make ENABLE_DUPLICATE_FILE_PATH_RECORD=NO
+          make
 
       - name: Update Beta Release
         env:
@@ -68,7 +53,6 @@ jobs:
           fi
           
           echo "### Commit SHA: ${{ github.sha }}" >> release_notes.md
-          
           cat release_notes.md
 
           gh release delete beta --cleanup-tag -y || true
