@@ -4,6 +4,7 @@ SCHEMES := Ksign
 TMP := $(TMPDIR)/$(NAME)
 STAGE := $(TMP)/stage
 APP := $(TMP)/Build/Products/Release-$(PLATFORM)
+PROJECT := $(shell find . -maxdepth 1 -name "*.xcodeproj" -print -quit)
 
 .PHONY: all clean $(SCHEMES)
 
@@ -26,7 +27,7 @@ deps:
 
 $(SCHEMES): deps
 	xcodebuild \
-	    -project Ksign.xcodeproj \
+	    -project $(PROJECT) \
 	    -scheme "$@" \
 	    -configuration Release \
 	    -arch arm64 \
@@ -36,8 +37,7 @@ $(SCHEMES): deps
 	    -skipMacroValidation \
 	    CODE_SIGNING_ALLOWED=NO \
 	    CODE_SIGNING_REQUIRED=NO \
-	    ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=NO \
-	    OTHER_SWIFT_FLAGS="-Xfrontend -disable-sandbox"
+	    ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=NO
 
 	rm -rf Payload
 	rm -rf "$(STAGE)/"
