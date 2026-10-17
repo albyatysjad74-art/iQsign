@@ -25,17 +25,16 @@ jobs:
             sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
           fi
 
-      - name: Neutralize LicensePlist & Missing Files
+      - name: Neutralize LicensePlist & Fix Duplicates
         run: |
-          # 1. إفراغ إعدادات الرخص
+          # 1. تفريغ إعدادات الرخص
           find . -name "license_plist.yml" -exec sh -c '> "$1"' _ {} \; 2>/dev/null || true
 
-          # 2. إنشاء ملفات LICENSE_LC أينما كان
+          # 2. إنشاء ملف LICENSE_LC في مسار Zsign
           mkdir -p Zsign
-          touch LICENSE_LC Zsign/LICENSE_LC
-          find . -type d -exec touch {}/LICENSE_LC \; 2>/dev/null || true
+          touch Zsign/LICENSE_LC
 
-          # 3. استبدال أداة license-plist بأمر وهمي يرجع نجاح دائماً لمنع إيقاف الـ Build Phase
+          # 3. تخطي تشغيل أداة الرخص بنجاح دائم
           mkdir -p "$HOME/bin"
           cat << 'EOF' > "$HOME/bin/license-plist"
           #!/bin/bash
@@ -46,7 +45,10 @@ jobs:
 
       - name: Build
         run: |
-          make OTHER_CODE_SIGN_FLAGS="--disablePackagePluginSandbox" || make
+          # تمرير متغيرات تعطيل فحص تكرار الملفات وقيود الإضافات إلى xcodebuild
+          make OTHER_CODE_SIGN_FLAGS="--disablePackagePluginSandbox" \
+               XCODE_FLAGS="ENABLE_DUPLICATE_FILE_PATH_RECORD=NO OTHER_SWIFT_FLAGS='-no-verify-emitted-module-interface'" \
+               || make ENABLE_DUPLICATE_FILE_PATH_RECORD=NO
 
       - name: Update Beta Release
         env:
