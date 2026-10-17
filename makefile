@@ -4,7 +4,6 @@ SCHEMES := Ksign
 TMP := $(TMPDIR)/$(NAME)
 STAGE := $(TMP)/stage
 APP := $(TMP)/Build/Products/Release-$(PLATFORM)
-PROJECT := $(shell find . -maxdepth 1 -name "*.xcodeproj" -print -quit)
 
 .PHONY: all clean $(SCHEMES)
 
@@ -27,16 +26,14 @@ deps:
 
 $(SCHEMES): deps
 	xcodebuild \
-	    -project $(PROJECT) \
+	    -project Ksign.xcodeproj \
 	    -scheme "$@" \
 	    -configuration Release \
 	    -arch arm64 \
 	    -sdk $(PLATFORM) \
 	    -derivedDataPath $(TMP) \
 	    -skipPackagePluginValidation \
-	    -skipMacroValidation \
 	    CODE_SIGNING_ALLOWED=NO \
-	    CODE_SIGNING_REQUIRED=NO \
 	    ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=NO
 
 	rm -rf Payload
