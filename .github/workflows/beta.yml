@@ -25,14 +25,20 @@ jobs:
             sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
           fi
 
-      - name: Fix Submodules & License File
+      - name: Prepare Environment & Submodules
         run: |
           git submodule update --init --recursive || true
+          
+          # وضع ملف الرخصة في مساره الصحيح دون تخريب الحزم
           find . -type d -name "Zsign" -exec touch {}/LICENSE_LC \; 2>/dev/null || true
+          mkdir -p Ksign/Zsign
+          touch Ksign/Zsign/LICENSE_LC 2>/dev/null || true
 
       - name: Build
         run: |
-          make
+          # تشغيل البناء وحذف رسائل Disabling previews المزعجة لإظهار الخطأ الصافي فقط
+          set -o pipefail
+          make 2>&1 | grep -v "Disabling previews because SWIFT_VERSION" | tee build.log || (echo "=== السبب الحقيقي لتوقف البناء ===" && grep -iE "error:|fatal|failed|missing|unable" build.log && exit 1)
 
       - name: Update Beta Release
         env:
