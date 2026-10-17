@@ -8,7 +8,7 @@ on:
 jobs:
   build:
     name: Build Beta
-    runs-on: macos-15
+    runs-on: macos-14
 
     steps:
       - name: Checkout Code
@@ -18,11 +18,46 @@ jobs:
           submodules: recursive
 
       - name: Select Xcode 16
-        run: sudo xcode-select -s /Applications/Xcode_16.0.app/Contents/Developer
+        run: |
+          # اختيار أحدث إصدار متوفر من Xcode 16 على بيئة البناء
+          XCODE_PATH=$(find /Applications -maxdepth 1 -name "Xcode_16*.app" | sort -V | tail -n 1)
+          if [ -n "$XCODE_PATH" ]; then
+            echo "Selected Xcode: $XCODE_PATH"
+            sudo xcode-select -s "$XCODE_PATH/Contents/Developer"
+          else
+            echo "Using default Xcode"
+          fi
+
+      - name: Setup Xcodebuild Destination Shim
+        run: |
+          # إنشاء غلاف لأمر xcodebuild لإجبار تحديد وجهة بناء iOS لأي أمر ينفذه make
+          mkdir -p "$HOME/bin"
+          REAL_XCODEBUILD=$(xcrun -f xcodebuild)
+          cat << 'EOF' > "$HOME/bin/xcodebuild"
+          #!/bin/bash
+          ARGS=("$@")
+          HAS_DEST=0
+          for arg in "$@"; do
+            if [ "$arg" = "-destination" ]; then
+              HAS_DEST=1
+              break
+            fi
+          done
+
+          if [ $HAS_DEST -eq 0 ]; then
+            exec "$REAL_XCODEBUILD_PATH" "${ARGS[@]}" -destination "generic/platform=iOS"
+          else
+            exec "$REAL_XCODEBUILD_PATH" "${ARGS[@]}"
+          fi
+          EOF
+
+          chmod +x "$HOME/bin/xcodebuild"
+          echo "REAL_XCODEBUILD_PATH=$REAL_XCODEBUILD" >> $GITHUB_ENV
+          echo "$HOME/bin" >> $GITHUB_PATH
 
       - name: Build
         run: |
-          # تعطيل قيود الـ Sandbox لإضافات Xcode وتمرير خيارات التجاوز لـ make
+          # تعطيل قيود الـ Sandbox لإضافات Xcode وتشغيل البناء
           make OTHER_CODE_SIGN_FLAGS="--disablePackagePluginSandbox" || make
 
       - name: Update Beta Release
