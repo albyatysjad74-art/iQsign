@@ -55,6 +55,39 @@ jobs:
           echo "REAL_XCODEBUILD_PATH=$REAL_XCODEBUILD" >> $GITHUB_ENV
           echo "$HOME/bin" >> $GITHUB_PATH
 
+      - name: Setup Zsign License File
+        run: |
+          # العثور على مسار Zsign المعتمد داخل المشروع وإنشاء ملف LICENSE_LC بنصه الرسمي
+          ZSIGN_DIR=$(find . -maxdepth 3 -type d -name "Zsign" | head -n 1)
+          if [ -z "$ZSIGN_DIR" ]; then
+            ZSIGN_DIR="Zsign"
+            mkdir -p "$ZSIGN_DIR"
+          fi
+
+          cat << 'EOF' > "$ZSIGN_DIR/LICENSE_LC"
+          MIT License
+
+          Copyright (c) zhlynn
+
+          Permission is hereby granted, free of charge, to any person obtaining a copy
+          of this software and associated documentation files (the "Software"), to deal
+          in the Software without restriction, including without limitation the rights
+          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+          copies of the Software, and to permit persons to whom the Software is
+          furnished to do so, subject to the following conditions:
+
+          The above copyright notice and this permission notice shall be included in all
+          copies or substantial portions of the Software.
+
+          THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+          SOFTWARE.
+          EOF
+
       - name: Build
         run: |
           make OTHER_CODE_SIGN_FLAGS="--disablePackagePluginSandbox" || make
