@@ -33,9 +33,11 @@ $(SCHEMES): deps
 	    -sdk $(PLATFORM) \
 	    -derivedDataPath $(TMP) \
 	    -skipPackagePluginValidation \
-	    -disablePackagePluginSandbox \
+	    -skipMacroValidation \
 	    CODE_SIGNING_ALLOWED=NO \
-	    ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=NO
+	    CODE_SIGNING_REQUIRED=NO \
+	    ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=NO \
+	    OTHER_SWIFT_FLAGS="-Xfrontend -disable-sandbox"
 
 	rm -rf Payload
 	rm -rf "$(STAGE)/"
