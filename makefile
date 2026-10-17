@@ -26,6 +26,7 @@ deps:
 
 $(SCHEMES): deps
 	xcodebuild \
+	    -quiet \
 	    -project Ksign.xcodeproj \
 	    -scheme "$@" \
 	    -configuration Release \
@@ -35,9 +36,6 @@ $(SCHEMES): deps
 	    -skipPackagePluginValidation \
 	    -skipMacroValidation \
 	    ENABLE_USER_SCRIPT_SANDBOXING=NO \
-	    ENABLE_DUPLICATE_FILE_PATH_RECORD=NO \
-	    SWIFT_STRICT_CONCURRENCY=minimal \
-	    SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
 	    CODE_SIGNING_ALLOWED=NO \
 	    ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES=NO
 
