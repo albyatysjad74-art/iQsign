@@ -33,7 +33,8 @@ $(SCHEMES): deps
 	    -sdk $(PLATFORM) \
 	    -derivedDataPath $(TMP) \
 	    -skipPackagePluginValidation \
-	    -disablePackagePluginSandbox \
+	    -skipMacroValidation \
+	    ENABLE_USER_SCRIPT_SANDBOXING=NO \
 	    ENABLE_DUPLICATE_FILE_PATH_RECORD=NO \
 	    SWIFT_STRICT_CONCURRENCY=minimal \
 	    SWIFT_TREAT_WARNINGS_AS_ERRORS=NO \
